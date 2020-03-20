@@ -352,4 +352,7 @@ The API will return three error types when requests fail:
 ```
  
 ## Authors
+- Tien Le
+- Udacity's Full Stack Web Developer Nanodegree Staff
 ## Acknowledgements
+- My Udacity mentor Irzelindo for helping me with debugging
