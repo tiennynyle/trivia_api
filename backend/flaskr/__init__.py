@@ -52,6 +52,9 @@ def create_app(test_config=None):
     questions = Question.query.all()
     questions_per_page = paginate_questions(request, questions)
     
+    if (len(questions_per_page) == 0):
+      abort(404)
+
     categories = Category.query.all()
     c_dict={}
     for category in categories:
@@ -94,12 +97,17 @@ def create_app(test_config=None):
 
 
     question = body.get('question')
+    print("okoko")
+    print(question)
     answer = body.get('answer')
     difficulty = body.get('difficulty')
     category = body.get('category')
+    if question is None or answer is None or difficulty is None or category is None:
+      abort(422)
     try:
       new_question = Question(question=question, answer=answer, 
                               difficulty=difficulty, category=category)
+    
       new_question.insert()
 
       questions = Question.query.all()
@@ -112,8 +120,7 @@ def create_app(test_config=None):
           'questions': questions_per_page,
           'total_questions':len(questions)
       })
-    except Exception, e:
-      print(str(e))
+    except:
       abort(422)
   
   #This endpoint gets questions based on a search term
@@ -125,6 +132,8 @@ def create_app(test_config=None):
    
     if search_term:
       search_results = Question.query.filter(Question.question.ilike('%{value}%'.format(value=search_term))).all()
+      if len(search_results) == 0:
+        abort(404)
       return jsonify({
         'success': True,
         'questions': [result.format() for result in search_results],
@@ -138,6 +147,13 @@ def create_app(test_config=None):
   @app.route('/categories/<int:category_id>/questions', methods=['GET'])
   def get_question_by_category(category_id):
     try:
+      ids = []
+      categories = Category.query.with_entities(Category.id).all()
+      for (id,) in categories:
+        ids.append(id)
+      
+      if category_id not in ids:
+        abort(404)
       questions = Question.query.filter(
                 Question.category == str(category_id)).all()
       print(questions)
@@ -155,15 +171,19 @@ def create_app(test_config=None):
   @app.route('/quizzes', methods=['POST'])
   def play_quiz():
     body = request.get_json()
+    
     previousQuestions = body.get('previous_questions')
     quiz_category = body.get('quiz_category')
-    print(quiz_category)
+    
+    if quiz_category is None:
+      abort(400)
     questions = None
     id = (quiz_category['id'])
-    if id != 0:
+    if id !=0:
       questions = Question.query.filter(Question.category == str(id)).all()
     else:
       questions = Question.query.all()
+    
     if previousQuestions != None:
       for question in questions:
         if question.id not in previousQuestions:
@@ -202,4 +222,11 @@ def create_app(test_config=None):
       "error": 400,
       "message": "bad request"
     }), 400
+  @app.errorhandler(405)
+  def method_not_allowed(error):
+    return jsonify({
+      "success": False,
+      "error": 405,
+      "message": "method not allowed"
+    })
   return app
