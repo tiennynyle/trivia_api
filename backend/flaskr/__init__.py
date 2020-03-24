@@ -97,8 +97,9 @@ def create_app(test_config=None):
         answer = body.get('answer')
         difficulty = body.get('difficulty')
         category = body.get('category')
-        if (question is None) or (answer is None) or (difficulty
-        is None) or (category is None):
+        if (question is None) or (answer is None) or (
+                                  difficulty is None) or (
+                                  category is None):
             abort(422)
         try:
             new_question = Question(question=question, answer=answer,
