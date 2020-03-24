@@ -17,9 +17,9 @@ class TriviaTestCase(unittest.TestCase):
         self.app = create_app()
         self.client = self.app.test_client
         self.database_name = "trivia_test"
-        self.database_path = "postgres://{}/{}".format('localhost:5432', self.database_name)
+        self.database_path = "postgres://{}/{}".format(
+                             'localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
-
 
         self.new_question = {
             'question': 'What is the capital of Georgia, USA?',
@@ -33,15 +33,11 @@ class TriviaTestCase(unittest.TestCase):
             self.db.init_app(self.app)
             # create all tables
             self.db.create_all()
-    
+
     def tearDown(self):
         """Executed after reach test"""
         pass
 
-    """
-    TODO
-    Write at least one test for each test for successful operation and for expected errors.
-    """
     def test_get_categories(self):
         res = self.client().get('/categories')
         data = json.loads(res.data)
@@ -106,12 +102,12 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['created'])
         self.assertTrue(data['total_questions'])
         self.assertTrue(len(data['questions']))
-    
+
     def test_422_if_question_creation_failed(self):
         old_num_questions = len(Question.query.all())
         res = self.client().post('/questions', json={})
         data = json.loads(res.data)
-        
+
         new_num_questions = len(Question.query.all())
 
         self.assertEqual(res.status_code, 422)
@@ -120,7 +116,8 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(old_num_questions == new_num_questions)
 
     def test_search_questions(self):
-        res = self.client().post('/questions/search', json={'searchTerm':'World Cup'})
+        res = self.client().post('/questions/search',
+                                 json={'searchTerm': 'World Cup'})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
@@ -130,7 +127,8 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['questions'][1]['id'], 11)
 
     def test_404_if_search_questions_failed(self):
-        res = self.client().post('/questions/search', json={'searchTerm': 'xxxhuhuhuhu'})
+        res = self.client().post('/questions/search',
+                                 json={'searchTerm': 'xxxhuhuhuhu'})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
@@ -155,17 +153,19 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'Not found')
 
     def test_play_quiz(self):
-        res = self.client().post('/quizzes', json={'previous_questions':[10,11],
-                                            'quiz_category': {'type': 'Science', 'id': '1'}})
-        data = json.loads(res.data)  
+        res = self.client().post('/quizzes', json={'previous_questions':
+                                                   [10, 11], 'quiz_category':
+                                                   {'type': 'Science',
+                                                    'id': '1'}})
+        data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertTrue(data['question']) 
+        self.assertTrue(data['question'])
         self.assertTrue(data['question']['category'], 1)
-        self.assertNotEqual(data['question']['id'], 10) 
+        self.assertNotEqual(data['question']['id'], 10)
         self.assertNotEqual(data['question']['id'], 11)
-    
+
     def test_play_quiz_failed(self):
         res = self.client().post('/quizzes', json={})
         data = json.loads(res.data)
